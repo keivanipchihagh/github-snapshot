@@ -1,41 +1,30 @@
-$(document).ready(function() {
+// Shows a preview of the GitHub page link
+function show_preview() {
+    username = $("#username-input").val();
+    github_page = (username != "") ? ("github.com/" + username) : "";
+    github_page_url = (username != "") ? ("https://" + github_page) : "";
 
-    // Show a preview of the actual GitHub link and a hyperlink to it
-    $("body").on("input", "#username-input", function() {
+    document.getElementById("link-preview").innerText = github_page
+    document.getElementById("link-preview").setAttribute("href", github_page_url);
+}
 
-        username = $("#username-input").val();
-        github_page = (username != "") ? ("github.com/" + username) : "";
-        github_page_url = (username != "") ? ("https://" + github_page) : "";
+// Sends a request to the GitHub API to retrieve the user data
+function submit_username() {
+    var xhttp = new XMLHttpRequest();
+    username = document.getElementById("username-input").value
+    url = "https://api.github.com/users/" + username;
 
-        $("#link-preview").text(github_page);
-        $("#link-preview").attr("href", github_page_url);
-    });
-
-    // Submit the form and retrieve the GitHub user data
-    $("#submit").click(function() {
-        $.ajax({
-            url: "https://api.github.com/users/" + $("#username-input").val(),
-            type: "GET",
-            dataType: "jsonp",  // JSONP is required to avoid CORS
-            headers: {
-                "accept": "application/json",
-                "Access-Control-Allow-Origin": "x-requested-with",  // CORS header
-            },
-            success: function(response) {
-                data = response["data"]
-                avatar_url = data["avatar_url"]
-                bio = data["bio"]
-                blog = data["blog"]
-                company = data["company"]
-                followers = data["followers"]
-                followings = data["following"]
-                location = data["location"]
-                name = data["name"]
-                public_repos = data["public_repos"]
-            },
-            error: function(response) {
-                alert(response);
-            }
-        });
-    });
-})
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var data = JSON.parse(this.responseText);
+            document.getElementById("fullname").innerText = data["name"];
+            document.getElementById("username").innerText = "@" + data["login"];
+            document.getElementById("avatar").setAttribute("src", data["avatar_url"]);
+            document.getElementById("bio").innerText = data["bio"];
+            document.getElementById("blog").innerText = data["blog"];
+            document.getElementById("location").innerText = data["location"];
+        }
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
+}
