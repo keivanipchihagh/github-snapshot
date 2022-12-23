@@ -85,21 +85,27 @@ function update_interface(data) {
         document.getElementById("bio").innerText = "This user is too shy (:";
 
     if (data["blog"]) {
-        document.getElementById("blog-link").innerText = data["blog"];
-        document.getElementById("blog-link").setAttribute("href", "https://" + data["blog"]);
+        document.getElementById("blog").innerText = data["blog"];
     } else
-        document.getElementById("blog-link").innerText = "";
+        document.getElementById("blog").innerText = "";
 
     if (data["location"])
-        document.getElementById("location-span").innerText = data["location"];
+        document.getElementById("location").innerHTML = 'Location: <span id="location-span" style="text-decoration: underline;">' + data["location"] + '</span>'
     else
-        document.getElementById("location-span").innerText = "";
+        document.getElementById("location").innerText = "";
 
-    document.getElementById("language").innerText = "Killer Language: " + data["lanauge"];
+    if (data["lanauge"])
+        document.getElementById("language").innerText = "Killer Language: " + data["lanauge"];
+    else
+        document.getElementById("language").innerText = ""
+
     console.log("Updated the page objects with " + data["login"] + "'s data.")
 }
 
 function get_favorite_language(repos) {
+
+    if (repos.length == 0)
+        return
 
     // Select 5 most recently pushed repos
     repos.sort(function(a, b) {
