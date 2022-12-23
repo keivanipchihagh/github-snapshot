@@ -108,10 +108,7 @@ function get_favorite_language(repos) {
         return
 
     // Select 5 most recently pushed repos
-    repos.sort(function(a, b) {
-        return Date(b.pushed_at) - Date(a.pushed_at);
-    });
-    repos = repos.slice(0, 5);
+    repos = repos.sort((a, b) => Date(b.pushed_at) - Date(a.pushed_at)).slice(0, 5)
     console.log(repos)
 
     // Calculate popularity dictionary
