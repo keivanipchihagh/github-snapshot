@@ -1,6 +1,6 @@
 // Shows a preview of the GitHub page link
 function show_preview() {
-    username = $("#username-input").val();
+    username = document.getElementById("username-input").value
     github_page = (username != "") ? ("github.com/" + username) : "";
     github_page_url = (username != "") ? ("https://" + github_page) : "";
     document.getElementById("link-preview").innerText = github_page
@@ -15,22 +15,42 @@ function submit_username() {
         data = read_from_local(username)
         console.log("Retrieved " + username + "'s data from LocalStorage.")
     } else {
-        data = retrieve_from_github(username);
+        data = retrieve_user_data_from_github(username);
+        if (!data) return;
+        respos = retrieve_user_repos_from_github(username);
+        data["lanauge"] = get_favorite_language(respos);    // Favorite language
         console.log("Retrieved " + username + "'s data from GitHub.")
         save_to_local(data);
     }
     update_interface(data);
+    document.getElementById("username-input").value = "";
+    document.getElementById("link-preview").innerText = "";
 }
 
 // Retrieve the user data from the GitHub API
-function retrieve_from_github(username) {
+function retrieve_user_data_from_github(username) {
     response = httpRequest("https://api.github.com/users/" + username, "GET")
     if (response.status == 200) {
         data = JSON.parse(response.responseText)
         console.log(data);
         return data
+    } else {
+        show_err("Hmmm... Username doesn't seem to exist!");
+        console.log("Error: " + response.status + " " + response.statusText);
     }
-    console.log("Error: " + response.status + " " + response.statusText);
+}
+
+// Retrieve the user repositories from the GitHub API
+function retrieve_user_repos_from_github(username) {
+    response = httpRequest("https://api.github.com/users/" + username + "/repos", "GET")
+    if (response.status == 200) {
+        data = JSON.parse(response.responseText)
+        console.log(data);
+        return data
+    } else {
+        show_err("Woops! Something went wrong while reading repostories!");
+        console.log("Error: " + response.status + " " + response.statusText);
+    }
 }
 
 // Sends an HTTP request to the given address and waits for a response
@@ -53,11 +73,53 @@ function httpRequest(address, reqType, asyncProc) {
 function update_interface(data) {
     document.getElementById("fullname").innerText = data["name"];
     document.getElementById("username").innerText = "@" + data["login"];
-    document.getElementById("avatar").setAttribute("src", data["avatar_url"]);
-    document.getElementById("bio").innerText = data["bio"];
-    document.getElementById("blog").innerText = data["blog"];
-    document.getElementById("location").innerText = data["location"];
+
+    if (data["avatar_url"])
+        document.getElementById("avatar").setAttribute("src", data["avatar_url"]);
+    else
+        document.getElementById("avatar").setAttribute("src", "images/octocat.png");
+
+    if (data["bio"])
+        document.getElementById("bio").innerText = data["bio"];
+    else
+        document.getElementById("bio").innerText = "This user is too shy (:";
+
+    if (data["blog"]) {
+        document.getElementById("blog-link").innerText = data["blog"];
+        document.getElementById("blog-link").setAttribute("href", "https://" + data["blog"]);
+    } else
+        document.getElementById("blog-link").innerText = "";
+
+    if (data["location"])
+        document.getElementById("location-span").innerText = data["location"];
+    else
+        document.getElementById("location-span").innerText = "";
+
+    document.getElementById("language").innerText = "Killer Language: " + data["lanauge"];
     console.log("Updated the page objects with " + data["login"] + "'s data.")
+}
+
+function get_favorite_language(repos) {
+
+    // Select 5 most recently pushed repos
+    repos.sort(function(a, b) {
+        return Date(b.pushed_at) - Date(a.pushed_at);
+    });
+    repos = repos.slice(0, 5);
+    console.log(repos)
+
+    // Calculate popularity dictionary
+    lanauge_popularity = {}
+    for (var i = 0; i < repos.length; i++) {
+        if (repos[i]["language"] in lanauge_popularity)
+            lanauge_popularity[repos[i]["language"]] += 1;
+        else
+            lanauge_popularity[repos[i]["language"]] = 1;
+    }
+    console.log(lanauge_popularity)
+
+    // Get the most popular language
+    return Object.keys(lanauge_popularity).reduce(function(a, b){ return lanauge_popularity[a] > lanauge_popularity[b] ? a : b });
 }
 
 // Stores the given user data to LocalStorage
