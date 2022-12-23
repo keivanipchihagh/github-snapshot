@@ -130,3 +130,14 @@ main {
     margin-top: 10px;
     padding: 5px 30px;
 }
+
+#alert {
+    width: 30%;
+    background-color: red;
+    opacity: 0;
+    margin: auto;;
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-align: center;
+    transition: opacity 2s;
+}
